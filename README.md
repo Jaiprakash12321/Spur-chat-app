@@ -57,6 +57,8 @@ pnpm dev
 
 Refer .env.example
 
+Keep DATABASE_URL as it is
+
 **5. Start Database**
 
 Pull postgres image
