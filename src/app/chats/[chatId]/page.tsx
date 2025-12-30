@@ -3,7 +3,13 @@ import { db } from "~/server/db"
 import { redirect, notFound } from "next/navigation"
 import MessageList from "~/components/MessageList"
 
-export default async function ChatPage({params}: { params: { chatId: string }}) {
+type PageProps = {
+  params: Promise<{
+    chatId: string
+  }>
+}
+
+export default async function ChatPage({params}: PageProps) {
 
     const session = await auth()
     if(!session?.user) return redirect('/signin')
