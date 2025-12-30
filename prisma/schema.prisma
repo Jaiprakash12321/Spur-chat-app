@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ASSISTANT
+}
+
+enum OauthProvider {
+    GOOGLE
+    GITHUB
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  username       String   @unique
+  email          String   @unique
+  password       String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastLogin      DateTime @default(now())
+
+  oauthProvider  OauthProvider?
+  oauthId        String?
+
+  profilePicture String?
+
+  chats          Chat[]
+
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  title     String   @default("New Chat")
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages  Message[]
+
+  @@index([userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  role      Role     @default(USER)
+  content   String
+
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+}
