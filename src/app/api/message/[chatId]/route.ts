@@ -4,7 +4,13 @@ import { createMessageSchema } from "~/lib/zod";
 import { auth } from "~/server/auth";
 import { db } from "~/server/db";
 
-export async function POST(req: NextRequest, { params }: { params: { chatId: string } }) {
+export type RouteContext = {
+   params: Promise<{
+    chatId: string
+   }>
+}
+
+export async function POST(req: NextRequest, context: RouteContext) {
      try {
             const session = await auth()
             if(!session?.user) return NextResponse.json({msg: 'Unauthorized'}, { status: 401})
@@ -15,7 +21,7 @@ export async function POST(req: NextRequest, { params }: { params: { chatId: str
 
             const { message } = parsedData.data
 
-            const { chatId } = params
+            const { chatId } = await context.params
             const chat = await db.chat.findUnique({where: {id: chatId}, select: {id: true, messages: true, title: true}})
             if(!chat) return NextResponse.json({msg: 'chat not found'}, {status: 404})
 
