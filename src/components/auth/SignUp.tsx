@@ -50,7 +50,7 @@ export default function SignUp() {
               <Card className='shadow-lg shadow-blue-700'>
                 <CardHeader className='text-center'>
                    <CardTitle className='text-[1.8rem] sm:text-5xl'>
-                    Welcome to <span className='bg-linear-to-b from-blue-400 to-blue-700 bg-clip-text pr-1 font-black tracking-tighter text-transparent'>GitAsk</span>
+                    Welcome to <span className='bg-linear-to-b from-blue-400 to-blue-700 bg-clip-text pr-1 font-black tracking-tighter text-transparent'>Spur</span>
                     </CardTitle>
                    <CardDescription className='sm:text-base'>Please enter your details to signup</CardDescription>
                 </CardHeader>
