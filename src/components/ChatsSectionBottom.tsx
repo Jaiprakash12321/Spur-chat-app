@@ -17,7 +17,7 @@ export default function ChatsSectionBottom() {
              </div>
 
             <button onClick={() => signOut({callbackUrl: '/'})}
-             className='flex items-center lowercase gap-2 text-base p-1.5 font-bold transition-all duration-100 text-red-500 hover:text-red-600 cursor-pointer'>
+             className='flex items-center lowercase border rounded-lg gap-2 text-base p-1.5 font-bold transition-all text-red-500 hover:text-red-600 hover:bg-red-500/15 hover:border-transparent duration-200 cursor-pointer'>
                   <LogOut className='size-4' strokeWidth={3}/> Log out
              </button>
 

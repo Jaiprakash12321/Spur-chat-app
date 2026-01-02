@@ -24,7 +24,7 @@ export async function signup(formData: formData) {
     const hashedPassword = await bcrypt.hash(password,10)
     const user = await db.user.create({data: {username,email,password: hashedPassword}, select: {id: true, email: true}})
 
-    return {success: true, msg: 'Signed up successfully. Welcome to GitAsk !!!'}
+    return {success: true, msg: 'Signed up successfully. Welcome to Spur !!!'}
 } catch(err) {
     console.error('Error while signing up',err)
     return {success: false, msg: 'Something went wrong !!!'}

@@ -21,6 +21,9 @@ export async function POST(req: NextRequest, context: RouteContext) {
             if(!parsedData.success) return NextResponse.json({msg: 'Invalid data', errors: parsedData.error.flatten()}, {status: 400})
 
             const { message } = parsedData.data
+            // Always add server side protection
+            // Client side can be manipulated by attackers
+            if(message.length > 1500) return NextResponse.json({msg: 'Prompt too big'}, { status: 401})
 
             const { chatId } = await context.params
             const chat = await db.chat.findUnique({where: {id: chatId}, select: {id: true, messages: { select: {role: true}}, title: true}})

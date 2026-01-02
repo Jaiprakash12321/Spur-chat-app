@@ -98,6 +98,9 @@ export default function ChatInput() {
     // it does not allow to submit (show formMessage) if you do not meet the conditions 
     // so you have to remove it from zod schema in order to show toast
     // try uncommenting the FormMessage
+
+    // Add both client and server side protection 
+    // Client side for better UX
      if(data.message.length > 1500) {
          toast.error('Prompt too big !')
          return
