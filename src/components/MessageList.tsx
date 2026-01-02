@@ -12,7 +12,16 @@ import { useChatStore } from "~/lib/store"
 
 export default function MessageList({chatId}: {chatId: string}) {
 
-    const { answer, loading} = useChatStore()
+    // Global state used by all chat components 
+    // That's why you see AI answer in all chats
+    // same for loading
+    // const { answer, loading} = useChatStore()
+
+    const loading = useChatStore(s => s.loading[chatId])
+    // const answer = useChatStore(s => s.answers[chatId])
+
+    const { answers } = useChatStore()
+    const answer = answers[chatId]
 
     const {data: messages, isLoading, isFetching, isRefetching, isError} = useQuery<Message[]>({
         queryKey: ['getMessages', chatId],
@@ -50,7 +59,7 @@ export default function MessageList({chatId}: {chatId: string}) {
 
     // toast.success(JSON.stringify(messages))
 
-    return <div id="message-container" className="flex flex-col p-2 grow gap-3 overflow-y-auto">
+    return <div id="message-container" className="flex flex-col p-2 grow gap-3 overflow-y-auto scrollbar scroll-smooth">
            {messages?.length == 0 ? (
                  <div className="flex flex-col items-center gap-3 self-center my-auto">
                     <span className="flex-center p-3 rounded-full bg-blue-700">
@@ -63,7 +72,7 @@ export default function MessageList({chatId}: {chatId: string}) {
                        
       {messages?.map((message, i) => {
         const isUser = message.role === "USER";
-
+        const Wrapper = isUser ? motion.div : "div"
         // const isUser = message.role === "USER" && false;
 
         return (
@@ -75,7 +84,7 @@ export default function MessageList({chatId}: {chatId: string}) {
               </div>
             )}
 
-                    <motion.div
+                    <Wrapper
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25 }}
@@ -87,11 +96,11 @@ export default function MessageList({chatId}: {chatId: string}) {
                     )}
                     >
                     {message.content}
-                    </motion.div>
+                    </Wrapper>
 
                     {isUser && <UserAvatar />}
                 </div>
-                );
+                )
             })}
 
                 </>
@@ -107,7 +116,7 @@ export default function MessageList({chatId}: {chatId: string}) {
                   {answer ? (
                     <span className="whitespace-pre-wrap leading-relaxed">{answer}</span>
                   ) : (
-                    <Loader className="size-5 animate-spin text-muted-foreground" />
+                    <Loader className="size-6 animate-spin text-muted-foreground" />
                   )}
                 </div>
               </div>

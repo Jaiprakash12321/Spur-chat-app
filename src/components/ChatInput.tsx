@@ -11,13 +11,17 @@ import { useParams, usePathname } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
-import { askQuestion } from "~/server/actions";
 import { useChatStore } from "~/lib/store";
-import { readStreamableValue } from "ai/rsc";
+import { streamResponse } from '~/hooks/useStreamResponse'
+import { useState } from "react";
+// import { readStreamableValue } from "ai/rsc";
 
 type Input = z.infer<typeof createMessageSchema>
 
 export default function ChatInput() {
+
+  // const [answer, setAnswer] = useState('')
+  // const [loading, setLoading] = useState(false)
 
   const pathname = usePathname()
   const isChatsRoot = pathname === "/chats"
@@ -39,6 +43,7 @@ export default function ChatInput() {
           const res = await axios.post(`/api/message/${chatId}`, {message: content})
           return res.data
       },
+      // OPTIMISTIC UPDATE FOR MESSAGES
       // onMutate: async (content: string) => {
       //        await queryClient.cancelQueries({ queryKey: ["getMessages", chatId] })
       //        const previousMessages = queryClient.getQueryData<any[]>(["getMessages",chatId])
@@ -56,13 +61,29 @@ export default function ChatInput() {
 
             toast.error('Something went wrong')
       },
-      onSettled: (data) => {
-           queryClient.refetchQueries({queryKey: ['getMessages', chatId]})
-           if(data.titleUpdated) queryClient.refetchQueries({queryKey: ['getChats']})
+      onSuccess: async (data) => {
+             // start streaming only after user message is visible on UI 
+             // try writing this in mutation fn
+             await queryClient.refetchQueries({queryKey: ['getMessages', chatId]})
+             // isPending remains true when onSuccess is getting executed 
+             // but dont want to show loader in send button when AI is streaming 
+             // that is why removed await from here
+             streamResponse(data.msg.content as string, chatId)
+            if(data.titleUpdated) queryClient.refetchQueries({queryKey: ['getChats']})    
       },
+      // onSettled runs after OnSuccess
+      onSettled: (data) => {
+           queryClient.invalidateQueries({queryKey: ['getMessages', chatId]})
+           if(data.titleUpdated)  {
+               toast.info('Updated chat title', { position: 'bottom-right'})
+               queryClient.invalidateQueries({queryKey: ['getChats']})
+           }
+      }
   })
 
-  const { setAnswer, setLoading, loading, appendAnswer} = useChatStore()
+  // const { setAnswer, setLoading, loading, appendAnswer} = useChatStore()
+
+  const loading = useChatStore(s => s.loading[chatId])
 
   const onSubmit = async (data: Input) => {
     // try {
@@ -74,7 +95,7 @@ export default function ChatInput() {
     // }
 
 
-    // it does not allow to submit if you do not meet the conditions 
+    // it does not allow to submit (show formMessage) if you do not meet the conditions 
     // so you have to remove it from zod schema in order to show toast
     // try uncommenting the FormMessage
      if(data.message.length > 1500) {
@@ -85,19 +106,23 @@ export default function ChatInput() {
      await createMessage(data.message)
      form.reset()
 
-     setAnswer('')
-     try { 
-          setLoading(true)
-          const { output } = await askQuestion(data.message, chatId as string)
+      // BETTER put it in onSuccess of createMessage
+    //  await streamResponse(data.message, chatId)
 
-             for await (const chunk of readStreamableValue(output)) {
-               if(chunk) appendAnswer(chunk)
-             }
-     } catch(err) {
-           toast.error('Something went wrong. Try again!!!')
-     } finally {
-        setLoading(false)
-     }
+    //  setAnswer('')
+    //  try { 
+    //       setLoading(true)
+    //       const { output } = await askQuestion(data.message, chatId as string)
+
+    //          for await (const chunk of readStreamableValue(output)) {
+    //            if(chunk) appendAnswer(chunk)
+                  // setAnswer(prev => prev + chunk)
+    //          }
+    //  } catch(err) {
+    //        toast.error('Something went wrong. Try again!!!')
+    //  } finally {
+    //     setLoading(false)
+    //  }
 
   }
 

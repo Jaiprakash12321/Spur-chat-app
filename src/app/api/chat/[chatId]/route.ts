@@ -17,7 +17,6 @@ export async function DELETE(req: NextRequest, context: RouteContext) {
       const { chatId } = await context.params
 
       const chat = await db.chat.findUnique({where: {id: chatId}, select: {id: true}})
-
       if(!chat) return NextResponse.json({msg: 'chat not found'}, {status: 404})
 
       await db.chat.delete({where: {id: chat.id}})

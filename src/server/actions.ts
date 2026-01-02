@@ -5,8 +5,10 @@ import bcrypt from 'bcrypt'
 import { db } from "~/server/db"
 import { z } from 'zod'
 import { streamText, generateText } from 'ai'
-import { createStreamableValue } from 'ai/rsc'
+// import { createStreamableValue } from 'ai/rsc'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createOpenAI } from "@ai-sdk/openai";
+import { auth } from "./auth"
 
 type formData = z.infer<typeof SignUpSchema>
 
@@ -29,13 +31,29 @@ export async function signup(formData: formData) {
  }
 }
 
+export async function createMessage(content: string, chatId: string) {
+     const session = await auth()
+     if(!session?.user) throw new Error('Unauthorized')
+     
+     await db.message.create({data: {content, chatId, role: 'ASSISTANT'}})
+}
+
 
 const google = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY as string})
 
-export async function askQuestion(question: string, chatId: string) {
-    const stream = createStreamableValue();
+export const openrouter = createOpenAI({
+  apiKey: process.env.OPENROUTER_API_KEY as string,
+  baseURL: "https://openrouter.ai/api/v1",
+  headers: {
+    "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL as string, 
+    "X-Title": "Spur Chat App",              
+  },
+});
 
-    let fullAnswer = "";
+export async function askQuestion(question: string, chatId: string) {
+    // const stream = createStreamableValue();
+
+    // let fullAnswer = "";
 
     const prevMessages = await db.message.findMany({where: {chatId}, orderBy: {createdAt: 'asc'}, take: 5, select: {content: true, role: true}});
 
@@ -46,10 +64,7 @@ export async function askQuestion(question: string, chatId: string) {
         context += '\n'
     }
 
-    (async () => {
-         const { textStream } = streamText({
-            model: google('gemini-2.0-flash'),
-            prompt: `You are a helpful support agent for a small e-commerce store. Answer clearly and concisely. If you do not know the answer, say so.
+    const prompt = `You are a helpful support agent for a small e-commerce store. Answer clearly and concisely. If you do not know the answer, say so.
 
                  Store knowledge:
 
@@ -72,20 +87,26 @@ export async function askQuestion(question: string, chatId: string) {
                 
                 Conversation so far : ${context}
                 User question: ${question.trim()}
-            `,
-         })
+            `;
 
-         for await (const chunk of textStream) {
-            fullAnswer += chunk
-            stream.update(chunk)
-         }
+    // (async () => {
+    //      const { textStream } = streamText({
+    //         // model: google('gemini-2.0-flash'),
+    //         model: openrouter('gpt-4') as any,
+    //         prompt
+    //      })
 
-         await db.message.create({data: {content: fullAnswer, chatId, role: 'ASSISTANT'}})
+    //      for await (const chunk of textStream) {
+    //         fullAnswer += chunk
+    //         stream.update(chunk)
+    //      }
 
-         stream.done()
-    })()
+    //      await db.message.create({data: {content: fullAnswer, chatId, role: 'ASSISTANT'}})
 
-    return {
-         output: stream.value,
-     }   
+    //      stream.done()
+    // })()
+
+    // return {
+    //      output: stream.value,
+    //  }   
 }

@@ -14,6 +14,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
      try {
             const session = await auth()
             if(!session?.user) return NextResponse.json({msg: 'Unauthorized'}, { status: 401})
+            const userId = parseInt(session.user.id)
 
             const body = await req.json()
             const parsedData = createMessageSchema.safeParse(body)
@@ -22,12 +23,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
             const { message } = parsedData.data
 
             const { chatId } = await context.params
-            const chat = await db.chat.findUnique({where: {id: chatId}, select: {id: true, messages: true, title: true}})
+            const chat = await db.chat.findUnique({where: {id: chatId}, select: {id: true, messages: { select: {role: true}}, title: true}})
             if(!chat) return NextResponse.json({msg: 'chat not found'}, {status: 404})
 
-            const msg = await db.message.create({data: {content: message, chatId, role: 'USER'}, select: {id: true}})
+            const msg = await db.message.create({data: {content: message, chatId, role: 'USER'}, select: {id: true, content: true}})
 
-            const isFirstUserMessage = chat.messages.filter((m) => m.role === "USER").length === 0 && chat.title === "New Chat";
+            const isFirstUserMessage = !chat.messages.some((m) => m.role === "USER") && chat.title === "New Chat";
 
             let titleUpdated = false;
 

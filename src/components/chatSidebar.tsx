@@ -37,7 +37,8 @@ export default function ChatSidebar() {
         block: "center",
       });
     }
-  }, [pathname])
+    // Why these dependencies ??
+  }, [pathname, chats])
 
  if(isError) return <div className="flex h-screen w-[25%] flex-col gap-4 p-3 border-r border-zinc-400 bg-accent dark:border-white/10 dark:bg-black">
       
@@ -77,7 +78,7 @@ export default function ChatSidebar() {
       
       <ChatsSectionHeader />
 
-      <div className="mt-2 flex flex-col shrink-0 gap-3 overflow-y-auto max-h-[62vh] min-h-[40vh] scrollbar">
+      <div className="mt-2 flex flex-col shrink-0 gap-3 overflow-y-auto h-[62vh] scrollbar scroll-smooth">
         {chats.map(chat => {
 
              const isActive = pathname === `/chats/${chat.id}`

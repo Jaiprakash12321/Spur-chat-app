@@ -17,3 +17,7 @@ export const SignInSchema = z.object({
 export const createMessageSchema = z.object({ message: z.string().min(1, { message: 'Enter a message!'})})
 
 export const updateTitleSchema = z.object({title: z.string().min(1, "Title cannot be empty").max(60, "Title too long")})
+
+export const streamSchema = z.object({
+  message: z.string().min(1),
+})
