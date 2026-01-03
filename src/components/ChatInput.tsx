@@ -68,6 +68,8 @@ export default function ChatInput() {
              // isPending remains true when onSuccess is getting executed 
              // but dont want to show loader in send button when AI is streaming 
              // that is why removed await from here
+
+             // stream only after message is created successfully (mutation is successfull)
              streamResponse(data.msg.content as string, chatId)
             if(data.titleUpdated) queryClient.refetchQueries({queryKey: ['getChats']})    
       },
