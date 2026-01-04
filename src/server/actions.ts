@@ -31,15 +31,38 @@ export async function signup(formData: formData) {
  }
 }
 
-export async function createMessage(content: string, chatId: string) {
-     const session = await auth()
-     if(!session?.user) throw new Error('Unauthorized')
-     
-     await db.message.create({data: {content, chatId, role: 'ASSISTANT'}})
+export type CreateMessageResult =
+  | { ok: true; messageId: string }
+  | { ok: false; code: "DB_ERROR" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "UNKNOWN" | "FORBIDDEN"; message?: string }
+
+export async function createMessage(content: string, chatId: string) : Promise<CreateMessageResult> {
+  try {
+      const session = await auth()
+      //  if(!session?.user) throw new Error('Unauthorized')
+      if (!session?.user?.id) return { ok: false, code: "UNAUTHORIZED", message: "You must be logged in" }
+      const userId = parseInt(session.user.id)
+
+      if (!content.trim()) return { ok: false, code: "VALIDATION_ERROR", message: "Message content is empty" }
+      
+      // Ownership check
+      const chat = await db.chat.findUnique({where: {id: chatId, userId}, select: {id: true}})
+      if(!chat) return { ok: false, code: 'FORBIDDEN', message: 'You do not have access to this chat'}
+
+       // ERROR FOR TESTING
+      // throw new Error('Test error')
+
+      const message = await db.message.create({data: {content, chatId, role: 'ASSISTANT'}, select: {id: true}})
+
+      return { ok: true, messageId: message.id}
+   } catch(err) {
+        console.error("[createMessage]", err)
+        // throw new Error('Error while saving the message')
+        return { ok: false, code: 'DB_ERROR', message: 'Failed to save message'}
+    }
 }
 
 
-const google = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY as string})
+// const google = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY as string})
 
 export const openrouter = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY as string,
@@ -48,7 +71,7 @@ export const openrouter = createOpenAI({
     "HTTP-Referer": process.env.NEXT_PUBLIC_APP_URL as string, 
     "X-Title": "Spur Chat App",              
   },
-});
+})
 
 export async function askQuestion(question: string, chatId: string) {
     // const stream = createStreamableValue();

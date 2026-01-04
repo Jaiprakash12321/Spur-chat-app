@@ -44,7 +44,17 @@ export async function streamResponse(message: string, chatId: string) {
              }
         }
 
-        await createMessage(fullAnswer, chatId)
+        const result = await createMessage(fullAnswer, chatId)
+
+        if (!result.ok) {
+            if (result.code === "UNAUTHORIZED") {
+                toast.error("Please sign in again")
+            } else if (result.code === "FORBIDDEN") {
+                toast.error("You don't have access to this chat")
+            } else {
+                toast.warning("Reply generated but not saved")
+            }
+        }
 
         await queryClient.refetchQueries({queryKey: ['getMessages', chatId]})
 

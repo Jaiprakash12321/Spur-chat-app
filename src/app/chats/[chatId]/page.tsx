@@ -21,6 +21,8 @@ export default async function ChatPage({params}: PageProps) {
     if(!chats || chats.length == 0) return redirect('/chats')
 
     // ADD userId to ensure chat belongs to user
+    // what if another user paste this url in his browser 
+    // he will able to see your chat
     const chat = await db.chat.findUnique({where: {id: chatId, userId}})
 
     const current_chat = chats.find(chat => chat.id == chatId)
