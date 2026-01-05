@@ -15,7 +15,7 @@ export async function streamResponse(message: string, chatId: string) {
         resetAnswer(chatId)
         setLoading(chatId, true)
 
-        await sleep(2000)
+        await sleep(1700)
 
         const res = await fetch(`/api/chat/stream/${chatId}`, {
         method: "POST",

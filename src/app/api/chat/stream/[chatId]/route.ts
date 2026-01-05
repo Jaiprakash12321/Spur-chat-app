@@ -23,11 +23,13 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
       const session = await auth()
       if(!session?.user) return NextResponse.json({msg: 'Unauthorized'}, { status: 401})
+      const userId = parseInt(session.user.id)
 
       const { chatId } = await ctx.params
 
-      const chat = await db.chat.findUnique({where: {id: chatId}, select: {id: true}})
-      if(!chat) return NextResponse.json({msg: 'chat not found'}, {status: 404})
+      // OWNERSHIP CHECK
+      const chat = await db.chat.findUnique({where: {id: chatId, userId}, select: {id: true}})
+      if(!chat) return NextResponse.json({msg: 'chat not found. You do not own this chat'}, {status: 404})
 
       const prevMessages = await db.message.findMany({where: {chatId}, orderBy: {createdAt: 'asc'}, take: 5, select: {content: true, role: true}});
   
