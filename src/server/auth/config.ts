@@ -85,12 +85,21 @@ export const authConfig = {
                 const {email,password} = credentials
         
                 const parsedData = SignInSchema.safeParse({email,password})
-                if(!parsedData.success) throw new Error('Invalid Credentials. try again !')
+                if(!parsedData.success) {
+                  return null
+                  throw new Error('Invalid Credentials. try again !')
+                }
                     
                 const user = await db.user.findUnique({where: {email}})
-                if(!user) throw new Error('User not found. Please check your email !')
+                if(!user) {
+                  return null
+                  throw new Error('User not found. Please check your email !')
+                }
                 const isMatch = await bcrypt.compare(password, user.password as string)     
-                if(!isMatch) throw new Error('Incorrect password. Try again !!!')
+                if(!isMatch) {
+                  return null
+                  throw new Error('Incorrect password. Try again !!!')
+                }
         
                 await db.user.update({where: {id: user.id}, data: {lastLogin: new Date()}})
         

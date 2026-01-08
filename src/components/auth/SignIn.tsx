@@ -14,9 +14,9 @@ import PasswordInput from './PasswordInput'
 import Link from 'next/link'
 import { signIn } from 'next-auth/react'
 import { toast } from 'sonner'
-import { useQueryClient } from '@tanstack/react-query'
-import axios from 'axios'
 import { useLoadingState } from '~/lib/store'
+import { useEffect, useRef } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 type SignInData = z.infer<typeof SignInSchema>
 
@@ -26,12 +26,28 @@ export default function SignIn() {
 
   const { loading, setLoading } = useLoadingState()
 
-  const queryClient = useQueryClient()
-
   const form = useForm<SignInData>({
     resolver: zodResolver(SignInSchema),
     defaultValues: { email: '', password: ''}
   })
+
+  const searchParams = useSearchParams()
+
+  // Shows toast twice due to reactStrictMode (will work fine in production)
+  // if you want one toast in dev mode either disable reactStrictMode or use shownRef
+
+  // const shownRef = useRef(false)
+
+  useEffect(() => {
+      // if (shownRef.current) return
+
+      const reason = searchParams.get("reason")
+      if(reason == "auth") {
+          // shownRef.current = true
+          toast.success('You need to signin first', { position : 'bottom-right'})
+          router.replace('/signin')
+      }
+  }, [searchParams])
 
   async function onSubmit(data: SignInData) {
     
@@ -40,22 +56,20 @@ export default function SignIn() {
     // await new Promise(r => setTimeout(r,7000))
     setLoading(false)
     
-    if(!res?.ok) {
-       const error = ['User not found. Please check your email !','Email not verified. Please check your email.','Incorrect password. Try again !!!'].includes(res?.error ?? '') ? res?.error : 'Something went wrong!!!'
+    console.log(res)
+
+    // Custom messages wont work now in nextauth new version
+    // Refer -> https://chatgpt.com/c/695fff19-9724-8324-9864-41b9c71debc8
+
+    // ALWAYS USE res.error
+    if(res?.error) {
+       const error = ['User not found. Please check your email !','Email not verified. Please check your email.','Incorrect password. Try again !!!'].includes(res?.error ?? '') ? res?.error : 'Invalid email or password!!!'
        return toast.error(error)
     }
     form.reset()
     router.push('/')
     toast.success('Login successfull!. Welcome back!')
 
-    // const projectId = localStorage.getItem('projectId')
-    // queryClient.prefetchQuery({ 
-    //   queryKey: ['getCommits', projectId],
-    //   queryFn: async () => {
-    //      const { data : { commits }} = await axios.get(`/api/commits/${projectId}`)
-    //      return commits
-    //   }
-    // })
   }
 
   return <div className="w-full min-h-screen flex-center pt-24 pb-5 text-lg">

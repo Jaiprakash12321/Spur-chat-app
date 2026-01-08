@@ -1,11 +1,22 @@
+import { redirect } from "next/navigation";
 import ChatInput from "~/components/ChatInput";
 import ChatSidebar from "~/components/chatSidebar";
+import { sleep } from "~/lib/utils";
+import { auth } from "~/server/auth";
 
-export default function ChatLayout({
+export default async function ChatLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+
+   // Try commenting out this 
+   const session = await auth()
+   if(!session?.user) return redirect('/signin?reason=auth')
+
+  //  await sleep(5000)
+
   return (
     <div className="flex h-screen">
       <ChatSidebar />
