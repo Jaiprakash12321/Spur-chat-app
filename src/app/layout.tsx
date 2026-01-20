@@ -3,7 +3,7 @@ import "~/styles/globals.css";
 import { type Metadata } from "next";
 import Providers from "./providers";
 import NextTopLoader from 'nextjs-toploader';
-import { DM_Sans, Space_Grotesk } from 'next/font/google';
+import { DM_Sans, Space_Grotesk, Inter } from 'next/font/google';
 import Navbar from "~/components/navbar";
 
 export const metadata: Metadata = {
@@ -22,13 +22,19 @@ const grotesk = Space_Grotesk({
   weight: ['400', '700'],
 });
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <body className={grotesk.className} suppressHydrationWarning={true}>
+      <body className={inter.className} suppressHydrationWarning={true}>
         <Providers>
          <NextTopLoader height={5} color="#38bdf8" showSpinner={false} easing="ease"/>
          <Navbar />
